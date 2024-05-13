@@ -1,3 +1,5 @@
 ﻿
-using var game = new GameJamCompo1.Game1();
+using GameJamCompo1;
+
+using var game = new GameInstance();
 game.Run();
