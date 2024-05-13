@@ -1,16 +1,19 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
+using Microsoft.Xna.Framework.Input;
 
 namespace GameJamCompo1;
 public class GameInstance : Game
 {
-	private const int BufferHeight = 144;
-	private const int BufferWidth = 224;
-
 	private GraphicsDeviceManager _graphics;
 	private SpriteBatch _spriteBatch;
 	private readonly RenderTarget2D _backbuffer;
+
+	private Player _player;
+	private Map _map;
+
+	public static Texture2D Pixel;
 
 	public GameInstance()
 	{
@@ -29,10 +32,21 @@ public class GameInstance : Game
 		};
 		_graphics.ApplyChanges();
 
+		Pixel = new Texture2D(GraphicsDevice, 1, 1);
+		Pixel.SetData(new[] { Color.White });
+
 		Window.AllowUserResizing = true;
 		IsMouseVisible = true;
 
-		_backbuffer = new RenderTarget2D(GraphicsDevice, BufferWidth, BufferHeight);
+		_backbuffer = new RenderTarget2D(GraphicsDevice, Constants.BufferWidth, Constants.BufferHeight);
+
+		_map = new Map();
+		_player = new Player
+		{
+			Position = new Vector2(22, 12),
+			Direction = new Vector2(-1, 0),
+			CameraPlane = new Vector2(0, 0.66f)
+		};
 	}
 
 	protected override void Initialize()
@@ -44,6 +58,20 @@ public class GameInstance : Game
 	protected override void Update(GameTime gameTime)
 	{
 		base.Update(gameTime);
+
+		var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+		var x = 0;
+		var y = 0;
+		var ks = Keyboard.GetState();
+
+		if (ks.IsKeyDown(Keys.W)) y--;
+		if (ks.IsKeyDown(Keys.S)) y++;
+		if (ks.IsKeyDown(Keys.A)) x--;
+		if (ks.IsKeyDown(Keys.D)) x++;
+
+		var movement = new Vector2(x, y) * dt;
+		_player.Position += movement;
 	}
 
 	protected override void Draw(GameTime gameTime)
@@ -51,7 +79,9 @@ public class GameInstance : Game
 		GraphicsDevice.SetRenderTarget(_backbuffer);
 		GraphicsDevice.Clear(Color.CornflowerBlue);
 
-
+		_spriteBatch.Begin();
+		_map.Draw(_spriteBatch, _player);
+		_spriteBatch.End();
 
 		GraphicsDevice.SetRenderTarget(null);
 		GraphicsDevice.Clear(Color.Black);
@@ -67,10 +97,10 @@ public class GameInstance : Game
 	{
 		var displayWidth = Window.ClientBounds.Width;
 		var displayHeight = Window.ClientBounds.Height;
-		var width = BufferWidth;
-		var height = BufferHeight;
-		var widthScale = displayWidth / (double)BufferWidth;
-		var heightScale = displayHeight / (double)BufferHeight;
+		var width = Constants.BufferWidth;
+		var height = Constants.BufferHeight;
+		var widthScale = displayWidth / (double)Constants.BufferWidth;
+		var heightScale = displayHeight / (double)Constants.BufferHeight;
 		var smallest = (int)Math.Min(widthScale, heightScale);
 
 		width *= smallest;
