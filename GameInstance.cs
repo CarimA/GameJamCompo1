@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -54,24 +55,78 @@ public class GameInstance : Game
 		_spriteBatch = new SpriteBatch(GraphicsDevice);
 		base.Initialize();
 	}
-	
+
 	protected override void Update(GameTime gameTime)
 	{
 		base.Update(gameTime);
 
 		var dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-		var x = 0;
-		var y = 0;
+		var x = 0f;
+		var y = 0f;
 		var ks = Keyboard.GetState();
 
-		if (ks.IsKeyDown(Keys.W)) y--;
-		if (ks.IsKeyDown(Keys.S)) y++;
-		if (ks.IsKeyDown(Keys.A)) x--;
-		if (ks.IsKeyDown(Keys.D)) x++;
+		var moveSpeed = 2f * dt;
+		var rotSpeed = 1f * dt;
 
-		var movement = new Vector2(x, y) * dt;
+		if (ks.IsKeyDown(Keys.D))
+		{
+			var oldDirX = _player.Direction.X;
+			var oldPlaneX = _player.CameraPlane.X;
+
+			_player.Direction = new Vector2(
+				(float)(_player.Direction.X * Math.Cos(-rotSpeed) - _player.Direction.Y * Math.Sin(-rotSpeed)),
+				(float)(oldDirX * Math.Sin(-rotSpeed) + _player.Direction.Y * Math.Cos(-rotSpeed)));
+
+			_player.CameraPlane = new Vector2(
+				(float)(_player.CameraPlane.X * Math.Cos(-rotSpeed) - _player.CameraPlane.Y * Math.Sin(-rotSpeed)),
+				(float)(oldPlaneX * Math.Sin(-rotSpeed) + _player.CameraPlane.Y * Math.Cos(-rotSpeed)));
+		}
+
+		if (ks.IsKeyDown(Keys.A))
+		{
+			var oldDirX = _player.Direction.X;
+			var oldPlaneX = _player.CameraPlane.X;
+
+			_player.Direction = new Vector2(
+				(float)(_player.Direction.X * Math.Cos(rotSpeed) - _player.Direction.Y * Math.Sin(rotSpeed)),
+				(float)(oldDirX * Math.Sin(rotSpeed) + _player.Direction.Y * Math.Cos(rotSpeed)));
+
+			_player.CameraPlane = new Vector2(
+				(float)(_player.CameraPlane.X * Math.Cos(rotSpeed) - _player.CameraPlane.Y * Math.Sin(rotSpeed)),
+				(float)(oldPlaneX * Math.Sin(rotSpeed) + _player.CameraPlane.Y * Math.Cos(rotSpeed)));
+		}
+
+		if (ks.IsKeyDown(Keys.W))
+		{
+			x += _player.Direction.X;
+			y += _player.Direction.Y;
+		}
+
+		if (ks.IsKeyDown(Keys.S))
+		{
+			x -= _player.Direction.X;
+			y -= _player.Direction.Y;
+		}
+
+		/*if (ks.IsKeyDown(Keys.A))
+		{
+			x -= _player.Direction.X;
+			y += _player.Direction.Y;
+		}
+
+		if (ks.IsKeyDown(Keys.D))
+		{
+			x += _player.Direction.X;
+			y -= _player.Direction.Y;
+		}*/
+
+		var axis = new Vector2(x, y);
+		var movement = axis * moveSpeed;
+
 		_player.Position += movement;
+
+		//_player.Position += movement;
 	}
 
 	protected override void Draw(GameTime gameTime)
